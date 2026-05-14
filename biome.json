@@ -1,0 +1,27 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "warn"
+			},
+			"style": {
+				"useBlockStatements": "error",
+				"useNamingConvention": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 80
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	}
+}
