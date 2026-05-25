@@ -1,11 +1,12 @@
-import { env } from "@/configs/env";
 import { jwtVerify, SignJWT } from "jose";
+import { env } from "@/configs/env";
 
 const secret = new TextEncoder().encode(env.JWT_SECRET);
 
 export interface TokenPayload {
 	userId: string;
 	companyId: string;
+	role: "SUPER_ADMIN" | "COMPANY_ADMIN" | "USER";
 }
 
 export const generateToken = async (payload: TokenPayload): Promise<string> => {

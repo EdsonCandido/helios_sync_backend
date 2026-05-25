@@ -1,5 +1,5 @@
 import pinoHttp from "pino-http";
-import { env } from "../configs/env";
+import { env } from "@/configs/env";
 
 export const loggerMiddleware = pinoHttp({
 	transport:

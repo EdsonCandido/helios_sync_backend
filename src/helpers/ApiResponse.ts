@@ -18,10 +18,12 @@ export const sendError = (
 	message: string,
 	statusCode = 500,
 	error: Error | null = null,
+	details: any = null,
 ) => {
 	return res.status(statusCode).json({
 		success: false,
 		message,
+		...(details ? { details } : {}),
 		...(process.env.NODE_ENV !== "production" && error
 			? { stack: error.stack }
 			: {}),

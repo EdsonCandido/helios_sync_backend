@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
-import { AppError } from "@/helpers/AppError";
 import { sendError } from "@/helpers/ApiResponse";
+import { AppError } from "@/helpers/AppError";
 
 export const errorMiddleware = (
 	error: Error,
@@ -14,7 +14,12 @@ export const errorMiddleware = (
 	}
 
 	if (error instanceof ZodError) {
-		return sendError(res, "Erro de validação", 400, error);
+		const issues = error.issues || [];
+		const validationErrors = issues.map((err: any) => ({
+			field: err.path.join("."),
+			message: err.message,
+		}));
+		return sendError(res, "Erro de validação", 400, null, validationErrors);
 	}
 
 	// Fallback for unexpected errors
