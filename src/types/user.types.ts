@@ -4,6 +4,7 @@ export interface User {
 	email: string;
 	password?: string;
 	active: boolean;
+	role: "SUPER_ADMIN" | "COMPANY_ADMIN" | "USER";
 	companyId: string;
 	createdAt: Date;
 	updatedAt: Date;
