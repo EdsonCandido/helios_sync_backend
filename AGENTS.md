@@ -1,24 +1,24 @@
-# 🧠 AGENTS.md — Diretrizes do Projeto Backend
+# 🧠 AGENTS.md — Diretrizes Backend
 
 ## 📌 Visão Geral
 
-Este projeto consiste em um backend **RESTful**, com autenticação baseada em JWT e persistência em banco relacional.
+Backend **RESTful**. Autenticação JWT. DB relacional.
 
 ### Stack principal
 
-* Backend: express + typescript  + knexjs
-* Banco de Dados: PostgreSQL
-* Autenticação: JWT (jose library)
-* Identificadores: UUID
-* Auditoria: Automática (createdAt, updatedAt, createdBy, updatedBy, active)
+* Backend: express + typescript + knexjs
+* DB: PostgreSQL
+* Auth: JWT (jose)
+* ID: UUID
+* Auditoria: Auto (createdAt, updatedAt, createdBy, updatedBy, active)
 
 ---
 
 ## 🏗️ Arquitetura
 
-Arquitetura em camadas:
+Camadas:
 
-```
+```text
 backend/
  ├── controllers/
  ├── services/
@@ -28,19 +28,18 @@ backend/
  ├── middleware/
  ├── types/
  └── database/
-
 ```
 
 Responsabilidades:
 
-* **controllers**: Finos, sem regra de negócio. Apenas endpoints e mapeamento de requests/responses.
-* **services**: Concentram regras de negócio e orquestração de acesso aos dados
-* **configs**: Segurança, CORS, envs e configurações gerais.
-* **database**: Configuração e migrações do knexjs
-* **helpers**: Funções auxiliares
-* **middleware**: Middlewares do express
-* **routes**: Rotas do express  
-* **types**: Tipos do typescript 
+* **controllers**: Finos. Sem regra de negócio. Só endpoints e map req/res.
+* **services**: Regras de negócio. Orquestração de dados.
+* **configs**: Segurança, CORS, envs, config geral.
+* **database**: Config e migrations knexjs.
+* **helpers**: Funções auxiliares.
+* **middleware**: Middlewares express.
+* **routes**: Rotas express.
+* **types**: Tipos typescript.
 
 ---
 
@@ -48,104 +47,112 @@ Responsabilidades:
 
 ### Estratégia
 
-* JWT obrigatório em todas requisições autenticadas
-* Sem uso de sessão
+* JWT obrigatório em reqs autenticadas.
+* Sem sessão.
 
 ### Header padrão
 
-```
+```http
 Authorization: Bearer <token>
 ```
 
 ### Regras
 
-* Token deve conter `userId` e `companyId`  no `sub` (ou claim específica).
-* Backend deve validar assinatura e expiração.
-* Retornar 401 Unauthorized para acessos inválidos.
-* Operações que alterem múltiplas entidades DEVEM utilizar transaction do knex
-* Nunca permitir persistência parcial de operações críticas
+* Token deve ter `userId` e `companyId` no `sub` (ou claim).
+* Validar assinatura e expiração.
+* Retornar 401 Unauthorized para token inválido.
+* Múltiplas alterações = transaction knex.
+* Zero persistência parcial de reqs críticas.
+
+---
+
+## 👥 Perfis de Acesso (Roles)
+
+* **`SUPER_ADMIN`**: Acesso irrestrito. Único perfil com permissão para criar outros administradores globais.
+* **`COMPANY_ADMIN`**: Gestor da empresa. Pode criar e gerenciar apenas usuários e outros gestores (`COMPANY_ADMIN` ou `USER`) atrelados à sua mesma `companyId`.
+* **`USER`**: Usuário normal da aplicação. Sem permissão para cadastrar ou gerenciar contas.
 
 ---
 
 ## 🌎 Variáveis de Ambiente
 
-* Toda variável de ambiente DEVE ser validada na inicialização da aplicação
-* Nunca acessar process.env diretamente fora da camada de config
-* Utilizar arquivo centralizado de configuração
+* Validar toda env no start.
+* Não usar `process.env` fora de `configs`.
+* Centralizar configs.
 
 ---
 
 ## ❗ Tratamento de Erros
 
-* Toda exceção deve ser tratada globalmente
-* Nunca retornar stacktrace para o cliente
-* Utilizar classes customizadas de erro
-* Controllers não devem possuir try/catch desnecessário
+* Tratar exceções globalmente.
+* Zero stacktrace no client.
+* Usar classes erro custom.
+* Controllers sem try/catch inútil.
 
 ## 🧬 Banco de Dados e Migrations
 
-Todas as entidades DEVEM:
+Todas entidades DEVEM:
 
-* Usar UUID como ID
-* Possuir auditoria completa
-* Toda alteração estrutural DEVE possuir migration
-* Nunca alterar migrations já executadas em produção
-* Seeds devem ser idempotentes
-* Toda tabela deve possuir:
+* Usar UUID como ID.
+* Auditoria completa.
+* Alteração estrutural = migration.
+* Não alterar migration em prod.
+* Seeds idempotentes.
+* Toda tabela ter:
   * id UUID
   * active
   * createdAt
   * updatedAt
   * createdBy
   * updatedBy
+
 ### Regras
 
-* ❌ Não usar delete físico
-* ✅ Usar soft delete (`active = false`)
-* ✅ Queries devem filtrar apenas `active = true`
+* ❌ Zero delete físico.
+* ✅ Soft delete (`active = false`).
+* ✅ Queries filtrar `active = true`.
 
 ---
 
 ## 📋 Logging
 
-* Utilizar logs estruturados
-* Nunca utilizar console.log em produção
-* Preferencialmente utilizar pino
-* Logs devem conter:
+* Logs estruturados.
+* Zero `console.log` prod.
+* Preferir `pino`.
+* Logs DEVEM ter:
   * timestamp
   * requestId
-  * userId (quando autenticado)
-  * nível do log
+  * userId (se autenticado)
+  * nível log
 
 ---
 
-
-
 ## ✅ Validação
 
-* Toda request DEVE ser validada
+* Validar toda request.
 * Validar:
   * params
   * query
   * body
-* Utilizar zod para schemas e inferência de tipos
-* Controllers nunca devem confiar em dados recebidos
+* Usar zod para schemas e tipos.
+* Controllers nunca confiam em dados client.
 
 ---
+
 ## 📦 Convenções de Código
 
-* **Acesso a Dados**: Nunca chamar repositórios diretamente de controllers, configs ou outras classes. Toda manipulação de entidade DEVE passar obrigatoriamente por um Service.
+* **Dados**: Controller/config não chama repo. Passar por Service.
 * **Nomenclatura**:
     * Controller: `NomeDaEntidadeController`
     * Service: `NomeDaEntidadeService`
+* Lint/formatação: biome.
+* `any` só com justificativa.
 
-* Utilizar biome para lint e formatação
-* Não permitir any sem justificativa
 ---
 
 ## 📡 Padrão de Response
 
-Todas as respostas da API DEVEM seguir padrão consistente.
+Padrão consistente.
 
 ### Sucesso
 
@@ -155,19 +162,19 @@ Todas as respostas da API DEVEM seguir padrão consistente.
   "data": {},
   "message": "Operação realizada com sucesso"
 }
-
+```
 
 ---
 
 ## 📝 Documentação obrigatória (/docs)
 
-* ✅ **Toda interação (feature, bugfix, refactor)** DEVE gerar documentação
-* 📁 A documentação deve ser salva na pasta `/docs`
-* 📁 Caso a pasta não exista, ela DEVE ser criada
+* ✅ Interações (feature/bugfix/refactor) = documentar.
+* 📁 Salvar em `/docs`.
+* 📁 Criar pasta se não existir.
 
 ### Estrutura obrigatória
 
-```
+```text
 docs/
  ├── evolutiva/       # Evolução do projeto (features, bugfixes)
  ├── prs_commits/     # Documentos de Pull Requests e Padrões de Commit
@@ -178,9 +185,9 @@ docs/
 ### Nome dos arquivos
 
 Padrão: `YYYY-MM-DD_nome-da-tarefa.md`
-Exemplo: `2026-04-18_criacao-endpoint-clientes.md`
+Ex: `2026-04-18_criacao-endpoint-clientes.md`
 
-### Conteúdo mínimo obrigatório
+### Conteúdo mínimo
 
 ```md
 # Nome da tarefa
@@ -189,45 +196,45 @@ Exemplo: `2026-04-18_criacao-endpoint-clientes.md`
 Descrever o que foi feito
 
 ## Alterações
-- Lista de mudanças realizadas
+- Lista de mudanças
 
-## Endpoints afetados (se houver)
+## Endpoints afetados
 - GET /clientes
 
 ## Regras de negócio
-- Descrever regras implementadas
+- Regras implementadas
 
 ## Observações
-- Pontos importantes / decisões técnicas
+- Pontos importantes / decisões
 ```
 
-### Regras de versionamento
-* ✅ **Commits**: Todos os commits DEVEM seguir estritamente as regras em `padrao-commits.md`.
+### Regras versionamento
+
+* ✅ **Commits**: Seguir regras `padrao-commits.md`.
 
 ---
 
 ## 🧪 Testes
 
-* Documentar e cobrir casos de uso complexos com testes (se solicitado).
+* Documentar/testar casos complexos.
 
 ---
 
 ## 🚫 Anti-patterns (proibido)
 
-* ❌ Usar ID incremental (usar UUID).
-* ❌ Expor entidade diretamente na API.
-* ❌ Deletar registros fisicamente.
-* ❌ Lógica de negócio no controller.
-* ❌ Chamar repositório diretamente (toda manipulação de entidade DEVE passar pelo Service).
-* ❌ Não documentar alterações em `/docs`.
+* ❌ ID incremental.
+* ❌ Expor entidade na API.
+* ❌ Delete físico.
+* ❌ Regra de negócio no controller.
+* ❌ Controller chama repositório direto.
+* ❌ Sem docs em `/docs`.
 
 ---
 
 ## ⚙️ Boas práticas obrigatórias
 
 * Logging estruturado
-* Tratamento global de exceções
-* Versionamento de API (ex: `/api/v1`)
-* Separação clara de camadas
-* Código limpo e legível
-
+* Erros globais
+* Versão API (`/api/v1`)
+* Camadas separadas
+* Código limpo
