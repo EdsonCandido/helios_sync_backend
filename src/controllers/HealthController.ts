@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import HealthService from "@/services/HealthService";
-import logger from "@/helpers/logger";
 import { sendError, sendSuccess } from "@/helpers/ApiResponse";
+import logger from "@/helpers/logger";
+import HealthService from "@/services/HealthService";
 
 export class HealthController {
 	public async check(_req: Request, res: Response) {
